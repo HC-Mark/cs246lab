@@ -23,40 +23,27 @@ array new_array(){
 // add a new element to the end of the array
 void add_element(array* arr, int new_elt);
 void add_element(array* arr, int new_elt){
-  int* mem = arr->mem;//arr->size = *arr.size
-  //if the current array is full, we will create a new one with 2* size
-  if(arr->num_elements == arr->size){
-    int* new_arr = malloc(arr->size * 2);
+  int* mem = arr->mem;
+  int size = arr->size;
+  int num_elements = arr -> num_elements;
 
-    for(int i =0; i < arr->size; i++){
-      new_arr[i] = mem[i];
+  if(num_elements == size){
+    int* new_mem = malloc(sizeof(int) * size *2);//here, it is not just simply make size *2
+    //since malloc need the bits of each type to save specific space for array
+
+    for(int i =0; i < size; i++){
+      new_mem[i] = mem[i];
     }
 
-    arr->size *= 2;
+    size *= 2;
+    arr->size = size;
     free(arr->mem);
-    mem = new_arr;
-    arr->mem = new_arr;
+    arr->mem = new_mem;
+    mem = new_mem;
   }
-  //if the current array can still hold the new_elt
-  //here we have num_elements help us keep track of the total number of elements
-  //therefore we don't actually need to test which we should put
-  /*
-  for (int i=0; i < arr->size; i++ ){
-    if(*mem == 0){
-      *mem = new_elt;
-      break;
-    }
-    if (*p != 0){
-      *(p+1) = new_elt;
-      break;
-    }
-    else{
-      p--;
-    }
-  }
-  */
-  mem[arr->num_elements++] = new_elt;
-  arr->num_elements += 1;
+
+  mem[num_elements] = new_elt;
+  arr-> num_elements++;
 }
 
 // access an element in the array. Returns -1 if the index is out of range.
@@ -68,31 +55,98 @@ int get(array* arr, int index){
 // change an element in the array. Returns the old element if the index is
 // in range, or -1 otherwise
 int set(array* arr, int index, int new_val);
+int set(array* arr, int index, int new_val){
+  int size = arr-> size;
+  if ( index > size)
+    return -1;
+
+  int old;
+  int* mem = arr -> mem;
+  old = *(mem + index);
+  *(mem + index) = new_val;
+
+  return old;
+  
+}
 
 // remove an element from the array, shifting rightward elements to the left
-void remove_elements(array* arr, int index);
+void remove_elements(array* arr, int index){
+  int size = arr-> size;
+  int* mem = arr -> mem;
+  for(int i = index;i < size; i++){
+    if(i == size - 1){
+      *(mem+i) = 0;
+    }
+    else{
+    *(mem + i) = *(mem + i +1);
+    }
+  }
+  
+}
 
 // returns the number of elements in an array
-int num_elements(array* arr);
+int num_elements(array* arr){
+
+  return arr->num_elements;
+
+}
 
 // release the memory used for this array (but not the array structure itself)
-void free_array(array* arr);
+void free_array(array* arr){
+  free(arr->mem);
+
+}
 
 // (a bit harder)
 // adds an element at the given (non-negative) index, enlarging the array
 // and shifting elements to the right to make it fit
-void add_element_at(array* arr, int index, int new_elt);
+void add_element_at(array* arr, int index, int new_elt){
+  if(index <0)
+    return;
+  int size = arr->size;
+  int num_elements = arr->num_elements;
+  int* mem = arr->mem;
+
+  if(num_elements == size){
+    int* new_mem = malloc(sizeof(int) * size * 2);
+
+    for(int i = 0; i < size; i++){
+      new_mem [i] = mem[i];
+    }
+
+    size *= 2;
+    arr->size = size;
+    free(arr->mem);
+    mem = new_mem;
+    arr->mem = new_mem;
+  }
+
+  for(int i = size ; i > index; i--){
+    *(mem + i) = *(mem + i -1);
+  }
+
+  *(mem + index) = new_elt;
+}
 
 int main() {
   array a = new_array();
   // *(a.mem + 3) = 3;
   #ifdef TEST
-  for(int i = 0; i < 10; i++){
-    add_element(&a,5);
+  for(int i = 0; i < 30; i++){
+    add_element(&a,2 * i);
    }
-  #endif
+  //though remove method works, the following loop can not remove all contents in array a
+  /*
   for(int i = 0; i< a.size; i++){
-    printf("number in array a: %d\n", get(&a,i));
+    remove_elements(&a,i);
   }
+  */
+  add_element_at(&a,5,1029);
+  for(int i = 0; i < a.size; i++){
+  printf("number in array a: %d\n", get(&a,i));
+  }
+  printf("there are %d elements in array.\n", num_elements(&a));
+  //free_array(&a);
+  #endif
   return 0;
 }
